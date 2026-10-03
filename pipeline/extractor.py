@@ -20,6 +20,19 @@ from .ocr_extractor import extract_from_image
 
 def extract_from_pdf(file_bytes: bytes) -> Dict[str, Any]:
     """Extracts text and page count from multi-page PDFs."""
+    global pdfplumber, pypdf
+    if pdfplumber is None:
+        try:
+            import pdfplumber
+        except ImportError:
+            pdfplumber = None
+
+    if pypdf is None:
+        try:
+            import pypdf
+        except ImportError:
+            pypdf = None
+
     pages_text = []
     page_count = 0
 
@@ -61,12 +74,23 @@ def extract_from_pdf(file_bytes: bytes) -> Dict[str, Any]:
         except Exception as e:
             return {"text": "", "page_count": 0, "error": f"PDF extraction failed: {str(e)}"}
 
-    return {"text": "", "page_count": 0, "error": "No PDF library installed."}
+    return {
+        "text": "",
+        "page_count": 0,
+        "error": "No PDF library installed. Please run: pip install pypdf pdfplumber"
+    }
 
 def extract_from_docx(file_bytes: bytes) -> Dict[str, Any]:
     """Extracts text from Word documents (paragraphs and tables)."""
+    global docx
     if docx is None:
-        return {"text": "", "page_count": 1, "error": "python-docx library not installed."}
+        try:
+            import docx
+        except ImportError:
+            docx = None
+
+    if docx is None:
+        return {"text": "", "page_count": 1, "error": "python-docx library not installed. Please run: pip install python-docx"}
     try:
         doc = docx.Document(io.BytesIO(file_bytes))
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
